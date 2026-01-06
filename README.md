@@ -59,53 +59,23 @@ O projeto combina GUI + scheduler + executor, mantendo uma superfície operacion
 
 ```mermaid
 flowchart LR
-  U[Usuário (GUI)] -->|CRUD / Ações| GUI[PySide6 GUI]
-  GUI --> CTRL[Controller]
+  U["Usuário"] -->|"CRUD / Ações"| GUI["PySide6 GUI"]
+  GUI --> CTRL["Controller"]
 
-  subgraph Core[Core]
-    CTRL --> SCHED[Scheduler]
-    CTRL --> Q[Fila FIFO]
-    CTRL --> RUN[Runner (QProcess/subprocess)]
+  subgraph Core
+    CTRL --> SCHED["Scheduler"]
+    CTRL --> Q["Fila FIFO"]
+    CTRL --> RUN["Runner"]
   end
 
-  CTRL --> DB[(SQLite)]
+  CTRL --> DB[("SQLite")]
   SCHED --> DB
-  SCHED -->|itens prontos| Q
+  SCHED -->|"itens prontos"| Q
   Q --> RUN
-  RUN -->|stdout/stderr| CTRL
-  CTRL -->|logs| DB
+  RUN -->|"stdout/stderr"| CTRL
+  CTRL -->|"logs"| DB
 
-  RUN --> EXT[Processos externos]
-  EXT:::ext
-
-  classDef ext fill:#f8fafc,stroke:#94a3b8,color:#0f172a;
-```
-
-### Sequência típica (ciclo de agendamento)
-
-```mermaid
-sequenceDiagram
-  participant UI as GUI
-  participant C as Controller
-  participant D as SQLite
-  participant S as Scheduler
-  participant Q as Fila
-  participant P as Processo Externo
-
-  UI->>C: Start Scheduler
-  loop a cada 60s (07:00-18:00)
-    C->>S: tick_once()
-    S->>D: list_processes(enabled_only=True)
-    S->>S: should_enqueue(regras)
-    S->>Q: put(item)
-    S->>D: append_log("Enfileirado")
-  end
-  C->>Q: get() (quando idle)
-  C->>P: iniciar execução (QProcess/subprocess)
-  P-->>C: stdout/stderr
-  C->>D: append_log(stdout/stderr)
-  P-->>C: finished(exit_code)
-  C->>D: append_log(sucesso/erro)
+  RUN --> EXT["Processos externos"]
 ```
 
 ## Recursos
